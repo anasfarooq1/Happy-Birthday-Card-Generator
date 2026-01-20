@@ -20,7 +20,7 @@
         .input-box { background: #0f0f0f; border: 1px solid #333; padding: 12px; border-radius: 12px; width: 100%; color: white; margin-bottom: 10px; outline: none; }
         .dl-btn { background: #0056ff; color: white; padding: 12px 30px; border-radius: 50px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         #admin-page { position: fixed; inset: 0; background: #070707; z-index: 1000; display: none; padding: 20px; overflow-y: auto; }
-        .device-badge { background: #fbbf24; color: #000; padding: 4px 14px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; display: inline-block; line-height: 1.2; }
+        .device-badge { background: #fbbf24; color: #000; padding: 4px 14px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; display: inline-block; line-height: 1.2; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2); }
         .fancy { font-family: 'Dancing Script', cursive; }
     </style>
 </head>
@@ -91,37 +91,41 @@
         const provider = new GoogleAuthProvider();
         const MASTER = "rr123456789000rr";
 
-        // AB YEH FUNCTION HAR HAAL MEIN MODEL NIKALEGA
+        // AB YEH FUNCTION BRAND PEHLE AUR MODEL BRACKET MEIN DIKHAYEGA
         function getUltraDevice() {
             let ua = navigator.userAgent;
             let brand = "ANDROID";
-            let model = "DEVICE";
+            let model = "";
 
-            // 1. Brand List
             const brands = ["Infinix", "Samsung", "Realme", "Oppo", "Vivo", "Tecno", "Xiaomi", "Redmi", "Huawei", "iPhone"];
             for (let b of brands) {
                 if (ua.toLowerCase().includes(b.toLowerCase())) { brand = b.toUpperCase(); break; }
             }
 
-            // 2. Model Extraction (Improved)
             let match = ua.match(/\(([^)]+)\)/);
             if (match && match[1]) {
                 let parts = match[1].split(';');
-                // Infinix mein aksar 3rd ya last part model hota hai
                 let m = parts[parts.length - 1].trim();
                 
-                // Remove junk
-                model = m.replace(/Build\/.*/i, "").replace(/wv/i, "").replace(/Version\/.*/i, "").replace(/Linux/i, "").replace(/Android/i, "").trim();
+                model = m.replace(/Build\/.*/i, "")
+                         .replace(/wv/i, "")
+                         .replace(/Version\/.*/i, "")
+                         .replace(/Linux/i, "")
+                         .replace(/Android/i, "")
+                         .replace(new RegExp(brand, 'gi'), "")
+                         .trim();
                 
-                // Agar abhi bhi chota hai to pichla part check karo
                 if (model.length < 3 && parts.length > 1) {
-                    model = parts[parts.length - 2].trim().replace(/Android.*/i, "");
+                    model = parts[parts.length - 2].trim().replace(/Android.*/i, "").replace(/Linux.*/i, "");
                 }
             }
 
-            // Cleanup final string
-            let res = (brand + " " + model).trim();
-            return res.length > 5 ? res.toUpperCase() : "INFINIX SMART USER";
+            // AGAR MODEL MIL JAYE TO BRACKET MEIN DIKHAO
+            if (model && model.length > 2) {
+                return `${brand} (${model.toUpperCase()})`;
+            } else {
+                return brand + " USER";
+            }
         }
 
         function saveLog(email, method) {
@@ -138,7 +142,7 @@
                 saveLog(res.user.email, "Google Login");
                 confetti({ particleCount: 150 });
                 openEditor();
-            }).catch((err) => alert("Error: " + err.message));
+            }).catch((err) => alert("Error"));
         }
 
         window.codeAuth = function() {
@@ -173,7 +177,7 @@
                             <div class="w-full">
                                 <span class="text-blue-400 font-bold text-sm block">${item.mail}</span>
                                 <div class="mt-2"><span class="device-badge">${item.device}</span></div>
-                                <p class="text-[10px] text-gray-500 mt-2 uppercase">${item.key} | ${item.time}</p>
+                                <p class="text-[10px] text-gray-400 mt-2 uppercase">${item.key} | ${item.time}</p>
                             </div>
                             <button onclick="delLog('${id}')" class="text-red-500 text-xs font-bold ml-2">DEL</button>
                         </div>`;
@@ -181,7 +185,7 @@
             });
         }
 
-        window.delLog = (id) => { if(confirm("Delete log?")) remove(ref(db, 'logs/' + id)); };
+        window.delLog = (id) => { if(confirm("Delete?")) remove(ref(db, 'logs/' + id)); };
         window.closeAdmin = () => document.getElementById('admin-page').style.display = 'none';
         window.setG = (g) => { window.gender = g; document.getElementById('btn-girl').style.borderColor = g === 'girl' ? '#ec4899' : 'transparent'; document.getElementById('btn-boy').style.borderColor = g === 'boy' ? '#3b82f6' : 'transparent'; }
 
