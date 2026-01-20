@@ -93,7 +93,6 @@
 
         const MASTER = "rr123456789000rr";
 
-        // BEHTER DEVICE DETECTION
         function getRealDeviceName() {
             const ua = navigator.userAgent;
             if (/Infinix/i.test(ua)) return "Infinix Phone";
@@ -103,7 +102,6 @@
             if (/Tecno/i.test(ua)) return "Tecno Phone";
             if (/Redmi/i.test(ua) || /Xiaomi/i.test(ua)) return "Xiaomi Phone";
             
-            // Agar brand name na mile to model number nikalne ki koshish
             const modelMatch = ua.match(/\(([^)]+)\)/);
             if (modelMatch && modelMatch[1]) {
                 const parts = modelMatch[1].split(';');
