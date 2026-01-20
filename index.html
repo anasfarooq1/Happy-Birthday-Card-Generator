@@ -83,7 +83,7 @@
             storageBucket: "birthday-card-generator-99aa3.firebaseapp.com",
             messagingSenderId: "357249797876",
             appId: "1:357249797876:web:ddfb4a8cd97386e781d8a1",
-            databaseURL: "https://happy-birthday-cards-generator-default-rtdb.firebaseio.com/"
+            databaseURL: "https://birthday-card-generator-99aa3-default-rtdb.firebaseio.com/"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -92,9 +92,7 @@
         const provider = new GoogleAuthProvider();
 
         const MASTER = "rr123456789000rr";
-        window.gender = 'girl';
 
-        // ADVANCED DEVICE NAME DETECTION
         function getRealDeviceName() {
             const ua = navigator.userAgent;
             if (/Infinix/i.test(ua)) return "Infinix Phone";
@@ -104,12 +102,6 @@
             if (/Vivo/i.test(ua)) return "Vivo Phone";
             if (/Tecno/i.test(ua)) return "Tecno Phone";
             if (/iPhone/i.test(ua)) return "Apple iPhone";
-            
-            const match = ua.match(/\(([^)]+)\)/);
-            if (match && match[1]) {
-                const details = match[1].split(';');
-                return details[details.length - 1].trim(); 
-            }
             return "Android Device";
         }
 
@@ -119,6 +111,10 @@
                 key: method,
                 device: getRealDeviceName(),
                 time: new Date().toLocaleString()
+            }).then(() => {
+                console.log("Data saved successfully!");
+            }).catch((err) => {
+                console.error("Save error: ", err);
             });
         }
 
@@ -143,8 +139,6 @@
             document.getElementById('editor-box').classList.remove('hidden');
         }
 
-        if(sessionStorage.getItem('isLogged') === 'true') setTimeout(openEditor, 500);
-
         window.checkAdmin = function() {
             if(prompt("Admin Key:") === MASTER) {
                 renderAdmin();
@@ -157,7 +151,7 @@
             onValue(ref(db, 'logs/'), (snapshot) => {
                 const data = snapshot.val();
                 list.innerHTML = "";
-                if(!data) return list.innerHTML = "<p class='text-gray-500 text-center'>Database Empty.</p>";
+                if(!data) return list.innerHTML = "<p class='text-gray-500 text-center'>No Users Found Yet.</p>";
                 Object.keys(data).reverse().forEach(id => {
                     const item = data[id];
                     list.innerHTML += `
