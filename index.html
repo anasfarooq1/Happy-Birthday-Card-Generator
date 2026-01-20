@@ -8,10 +8,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@400;800&display=swap');
         body { background: #000; color: white; font-family: 'Poppins', sans-serif; }
@@ -40,7 +36,7 @@
         <div class="flex flex-col lg:flex-row">
             <aside class="w-full lg:w-80 p-6 bg-zinc-900 lg:h-[calc(100vh-65px)] lg:sticky lg:top-[65px]">
                 <div id="auth-box">
-                    <button id="google-login-btn" onclick="gmailLogin()" class="w-full bg-white text-black py-3 rounded-xl font-bold mb-4 flex items-center justify-center gap-2">
+                    <button id="google-login-btn" onclick="loginWithGoogle()" class="w-full bg-white text-black py-3 rounded-xl font-bold mb-4 flex items-center justify-center gap-2">
                         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="18"> Google Login
                     </button>
                     <p class="text-center text-[10px] text-gray-500 mb-4">--- OR USE ACCESS CODE ---</p>
@@ -75,80 +71,76 @@
         </div>
     </div>
 
-    <script>
-        // FIREBASE LIVE CONFIGURATION
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
         const firebaseConfig = {
-            apiKey: "AIzaSyDDsurl30whmxaB_hHh9HWIGSuroxdc4qc",
-            authDomain: "my-d-web.firebaseapp.com",
-            databaseURL: "https://happy-birthday-cards-generator-default-rtdb.firebaseio.com/",
-            projectId: "my-d-web",
-            storageBucket: "my-d-web.firebasestorage.app",
-            messagingSenderId: "176710175623",
-            appId: "1:176710175623:web:609374e87fa1cb86196122",
-            measurementId: "G-MXZLRNZ4VV"
+            apiKey: "AIzaSyDGSZPmSTAbTyYo7gpFicOoSLEDpaMbNOA",
+            authDomain: "birthday-card-generator-99aa3.firebaseapp.com",
+            projectId: "birthday-card-generator-99aa3",
+            storageBucket: "birthday-card-generator-99aa3.firebaseapp.com",
+            messagingSenderId: "357249797876",
+            appId: "1:357249797876:web:ddfb4a8cd97386e781d8a1",
+            databaseURL: "https://happy-birthday-cards-generator-default-rtdb.firebaseio.com/"
         };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.database();
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        const provider = new GoogleAuthProvider();
 
         const MASTER = "rr123456789000rr";
-        let gender = 'girl';
+        window.gender = 'girl';
 
-        // Check Session
-        if(sessionStorage.getItem('isLogged') === 'true') {
-            openEditor();
-        }
-
-        // DEVICE INFO FUNCTION
-        function getDeviceInfo() {
+        // Function to detect phone model/brand
+        function getPhoneModel() {
             const ua = navigator.userAgent;
             if (/android/i.test(ua)) {
-                const match = ua.match(/Android\s([^\;]+)\;\s([^)]+)/);
-                return match ? match[2].split('Build')[0] : "Android Phone";
+                if (/samsung/i.test(ua)) return "Samsung Phone";
+                if (/oppo/i.test(ua)) return "Oppo Phone";
+                if (/vivo/i.test(ua)) return "Vivo Phone";
+                if (/xiaomi/i.test(ua)) return "Xiaomi Phone";
+                return "Android Device";
             }
             if (/iPhone|iPad/i.test(ua)) return "iPhone / iOS";
-            return "PC / Laptop";
+            return "PC / Desktop";
         }
 
-        // LOG SAVING TO SERVER
         function saveLog(email, method) {
-            const device = getDeviceInfo();
-            db.ref('logs/').push({
+            push(ref(db, 'logs/'), {
                 mail: email,
                 key: method,
-                device: device,
-                time: new Date().toLocaleString(),
-                timestamp: Date.now()
+                device: getPhoneModel(),
+                time: new Date().toLocaleString()
             });
         }
 
-        // AUTHENTICATION FUNCTIONS
-        async function gmailLogin() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).then((res) => {
+        window.loginWithGoogle = function() {
+            signInWithPopup(auth, provider).then((res) => {
                 saveLog(res.user.email, "Google Login");
+                confetti({ particleCount: 150 });
                 openEditor();
-            }).catch((err) => {
-                alert("Login Error: Make sure Authorized Domains are updated in Firebase.");
-            });
+            }).catch((err) => alert("Login Masla: " + err.message));
         }
 
-        function codeAuth() {
+        window.codeAuth = function() {
             if(document.getElementById('access-code').value === MASTER) {
                 saveLog("Used Code", "Master Key");
                 openEditor();
             } else alert("Wrong Access Code!");
         }
 
-        function openEditor() {
+        window.openEditor = function() {
             sessionStorage.setItem('isLogged', 'true');
             document.getElementById('auth-box').classList.add('hidden');
             document.getElementById('editor-box').classList.remove('hidden');
-            confetti({ particleCount: 150 });
         }
 
-        // ADMIN PANEL FUNCTIONS (SHOWS ON EVERY PHONE)
-        function checkAdmin() {
+        if(sessionStorage.getItem('isLogged') === 'true') setTimeout(openEditor, 500);
+
+        window.checkAdmin = function() {
             if(prompt("Admin Key:") === MASTER) {
                 renderAdmin();
                 document.getElementById('admin-page').style.display = 'block';
@@ -157,48 +149,38 @@
 
         function renderAdmin() {
             const list = document.getElementById('admin-list');
-            db.ref('logs/').on('value', (snapshot) => {
+            onValue(ref(db, 'logs/'), (snapshot) => {
                 const data = snapshot.val();
                 list.innerHTML = "";
-                if(!data) {
-                    list.innerHTML = "<p class='text-gray-500 text-center'>Database Empty.</p>";
-                    return;
-                }
-                // Show Newest First
-                const keys = Object.keys(data).reverse();
-                keys.forEach(id => {
+                if(!data) return list.innerHTML = "<p class='text-gray-500 text-center'>Database Empty.</p>";
+                Object.keys(data).reverse().forEach(id => {
                     const item = data[id];
                     list.innerHTML += `
                         <div class="bg-zinc-900 p-4 rounded-xl flex justify-between items-center border border-white/5 mb-3">
                             <div>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-blue-400 font-bold">${item.mail}</span>
-                                    <span class="device-badge">${item.device}</span>
-                                </div>
-                                <p class="text-[10px] text-gray-500 mt-1 uppercase">Method: ${item.key} | ${item.time}</p>
+                                <span class="text-blue-400 font-bold">${item.mail}</span>
+                                <span class="device-badge ml-2">${item.device}</span>
+                                <p class="text-[10px] text-gray-500 mt-1 uppercase">${item.key} | ${item.time}</p>
                             </div>
-                            <button onclick="delLog('${id}')" class="text-red-500 text-xs border border-red-500/20 px-3 py-2 rounded-lg font-bold">DELETE</button>
+                            <button onclick="delLog('${id}')" class="text-red-500 text-xs font-bold">DELETE</button>
                         </div>`;
                 });
             });
         }
 
-        function delLog(id) {
-            if(confirm("Permanently delete this info from server?")) {
-                db.ref('logs/' + id).remove();
-            }
+        window.delLog = function(id) {
+            if(confirm("Delete this log?")) remove(ref(db, 'logs/' + id));
         }
 
-        function closeAdmin() { document.getElementById('admin-page').style.display = 'none'; }
-
-        // GENERATOR LOGIC
-        function setG(g) {
-            gender = g;
+        window.closeAdmin = function() { document.getElementById('admin-page').style.display = 'none'; }
+        
+        window.setG = function(g) {
+            window.gender = g;
             document.getElementById('btn-girl').style.borderColor = g === 'girl' ? '#ec4899' : 'transparent';
             document.getElementById('btn-boy').style.borderColor = g === 'boy' ? '#3b82f6' : 'transparent';
         }
 
-        function create30() {
+        window.create30 = function() {
             const n = document.getElementById('u-name').value;
             const r = document.getElementById('u-rel').value;
             const m = document.getElementById('u-msg').value;
@@ -206,7 +188,7 @@
             if(!n) return alert("Please enter a name!");
             const grid = document.getElementById('grid');
             grid.innerHTML = "";
-            const decors = gender === 'girl' ? ['🌸', '❤️', '🦋', '✨'] : ['🎈', '🚀', '🏎️', '⭐'];
+            const decors = window.gender === 'girl' ? ['🌸', '❤️', '🦋', '✨'] : ['🎈', '🚀', '🏎️', '⭐'];
             for(let i=0; i<30; i++) {
                 const hue = (i * 12) % 360;
                 const bg = `linear-gradient(135deg, hsl(${hue}, 80%, 25%), hsl(${hue + 40}, 60%, 5%))`;
@@ -230,7 +212,7 @@
             window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
-        async function saveGal(id) {
+        window.saveGal = async function(id) {
             const btn = event.target;
             btn.innerText = "Saving...";
             const canvas = await html2canvas(document.getElementById(id), { scale: 3, useCORS: true });
@@ -244,36 +226,5 @@
             });
         }
     </script>
-<script type="module">
-  // Firebase functions import karna
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-  // Aapki configuration (Jo pehle se wahan hai)
-  const firebaseConfig = {
-    apiKey: "AIzaSyDGSZPmSTAbTyYo7gpFicOoSLEDpaMbNOA",
-    authDomain: "birthday-card-generator-99aa3.firebaseapp.com",
-    projectId: "birthday-card-generator-99aa3",
-    storageBucket: "birthday-card-generator-99aa3.firebaseapp.com",
-    messagingSenderId: "357249797876",
-    appId: "1:357249797876:web:ddfb4a8cd97386e781d8a1"
-  };
-
-  // Firebase ko initialize karna
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
-
-  // Login karne ka function
-  window.loginWithGoogle = function() {
-    signInWithPopup(auth, provider)
-      .then((result) => {
-        alert("Salam " + result.user.displayName + "! Login Kamyab raha.");
-      }).catch((error) => {
-        alert("Masla Aa Gaya: " + error.message);
-      });
-  }
-      </script>
-    
 </body>     
-</html>
+    </html>
