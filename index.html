@@ -95,9 +95,21 @@
 
         function getRealDeviceName() {
             const ua = navigator.userAgent;
-            const brands = ["Infinix", "Samsung", "Oppo", "Vivo", "Tecno", "Redmi", "Xiaomi", "iPhone", "Huawei", "Realme"];
-            for (let b of brands) { if (new RegExp(b, "i").test(ua)) return b.toUpperCase(); }
-            return "ANDROID";
+            const brands = ["Infinix", "Samsung", "Realme", "Oppo", "Vivo", "Tecno", "Redmi", "Xiaomi", "iPhone", "Huawei"];
+            
+            // Specifically checking for Realme 9C or other specific models
+            for (let b of brands) {
+                if (new RegExp(b, "i").test(ua)) {
+                    let model = "";
+                    const modelMatch = ua.match(/\(([^)]+)\)/);
+                    if (modelMatch && modelMatch[1]) {
+                        const parts = modelMatch[1].split(';');
+                        model = parts[parts.length - 1].trim().toUpperCase();
+                    }
+                    return model || b.toUpperCase();
+                }
+            }
+            return "ANDROID DEVICE";
         }
 
         function saveLog(email, method) {
@@ -131,7 +143,8 @@
         }
 
         window.checkAdmin = function() {
-            if(prompt("Admin Key:") === MASTER) {
+            const key = prompt("Admin Key:");
+            if(key === MASTER) {
                 renderAdmin();
                 document.getElementById('admin-page').style.display = 'block';
             }
@@ -217,4 +230,5 @@
         }
     </script>
 </body>     
-</html>
+    </html>
+    
