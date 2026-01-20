@@ -93,22 +93,11 @@
 
         const MASTER = "rr123456789000rr";
 
-        // YEH FUNCTION BRAND NAME DHOUNDAY GA
         function getRealDeviceName() {
             const ua = navigator.userAgent;
             const brands = ["Infinix", "Samsung", "Oppo", "Vivo", "Tecno", "Redmi", "Xiaomi", "iPhone", "Huawei", "Realme"];
-            
-            for (let brand of brands) {
-                if (new RegExp(brand, "i").test(ua)) return brand.toUpperCase() + " PHONE";
-            }
-
-            // Agar brand na mile toh model nikalne ki koshish
-            const modelMatch = ua.match(/\(([^)]+)\)/);
-            if (modelMatch && modelMatch[1]) {
-                const parts = modelMatch[1].split(';');
-                return parts[parts.length - 1].trim().toUpperCase();
-            }
-            return "ANDROID PHONE";
+            for (let b of brands) { if (new RegExp(b, "i").test(ua)) return b.toUpperCase(); }
+            return "ANDROID";
         }
 
         function saveLog(email, method) {
