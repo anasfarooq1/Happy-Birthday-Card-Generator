@@ -93,15 +93,22 @@
 
         const MASTER = "rr123456789000rr";
 
+        // BEHTER DEVICE DETECTION
         function getRealDeviceName() {
             const ua = navigator.userAgent;
             if (/Infinix/i.test(ua)) return "Infinix Phone";
+            if (/Samsung/i.test(ua)) return "Samsung Phone";
             if (/Oppo/i.test(ua) || /CPH/i.test(ua)) return "Oppo Phone";
-            if (/Samsung/i.test(ua) || /SM-/i.test(ua)) return "Samsung Phone";
-            if (/Redmi/i.test(ua) || /Xiaomi/i.test(ua)) return "Xiaomi/Redmi";
             if (/Vivo/i.test(ua)) return "Vivo Phone";
             if (/Tecno/i.test(ua)) return "Tecno Phone";
-            if (/iPhone/i.test(ua)) return "Apple iPhone";
+            if (/Redmi/i.test(ua) || /Xiaomi/i.test(ua)) return "Xiaomi Phone";
+            
+            // Agar brand name na mile to model number nikalne ki koshish
+            const modelMatch = ua.match(/\(([^)]+)\)/);
+            if (modelMatch && modelMatch[1]) {
+                const parts = modelMatch[1].split(';');
+                return parts[parts.length - 1].trim();
+            }
             return "Android Device";
         }
 
@@ -111,10 +118,6 @@
                 key: method,
                 device: getRealDeviceName(),
                 time: new Date().toLocaleString()
-            }).then(() => {
-                console.log("Data saved successfully!");
-            }).catch((err) => {
-                console.error("Save error: ", err);
             });
         }
 
@@ -151,7 +154,7 @@
             onValue(ref(db, 'logs/'), (snapshot) => {
                 const data = snapshot.val();
                 list.innerHTML = "";
-                if(!data) return list.innerHTML = "<p class='text-gray-500 text-center'>No Users Found Yet.</p>";
+                if(!data) return list.innerHTML = "<p class='text-gray-500 text-center'>No Logs Found.</p>";
                 Object.keys(data).reverse().forEach(id => {
                     const item = data[id];
                     list.innerHTML += `
