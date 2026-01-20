@@ -244,5 +244,36 @@
             });
         }
     </script>
-</body>
+<script type="module">
+  // Firebase functions import karna
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+  // Aapki configuration (Jo pehle se wahan hai)
+  const firebaseConfig = {
+    apiKey: "AIzaSyDGSZPmSTAbTyYo7gpFicOoSLEDpaMbNOA",
+    authDomain: "birthday-card-generator-99aa3.firebaseapp.com",
+    projectId: "birthday-card-generator-99aa3",
+    storageBucket: "birthday-card-generator-99aa3.firebaseapp.com",
+    messagingSenderId: "357249797876",
+    appId: "1:357249797876:web:ddfb4a8cd97386e781d8a1"
+  };
+
+  // Firebase ko initialize karna
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  // Login karne ka function
+  window.loginWithGoogle = function() {
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        alert("Salam " + result.user.displayName + "! Login Kamyab raha.");
+      }).catch((error) => {
+        alert("Masla Aa Gaya: " + error.message);
+      });
+  }
+      </script>
+    
+</body>     
 </html>
