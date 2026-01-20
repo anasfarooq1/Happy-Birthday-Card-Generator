@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Birthday Cards Generator - Pro Live</title>
+    <title>Birthday Cards - Pro Final</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
@@ -21,7 +21,7 @@
         .input-box { background: #0f0f0f; border: 1px solid #333; padding: 12px; border-radius: 12px; width: 100%; color: white; margin-bottom: 10px; outline: none; }
         .dl-btn { background: #0056ff; color: white; padding: 12px 30px; border-radius: 50px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         #admin-page { position: fixed; inset: 0; background: #070707; z-index: 1000; display: none; padding: 20px; overflow-y: auto; }
-        .device-badge { background: #1e1e1e; color: #fbbf24; padding: 2px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+        .device-badge { background: #fbbf24; color: #000; padding: 4px 14px; border-radius: 8px; font-size: 13px; font-weight: 900; text-transform: uppercase; display: inline-block; box-shadow: 0 4px 10px rgba(251, 191, 36, 0.3); }
         .fancy { font-family: 'Dancing Script', cursive; }
     </style>
 </head>
@@ -29,7 +29,7 @@
 
     <div id="creator-page">
         <header class="p-4 flex justify-between items-center border-b border-white/10 bg-black sticky top-0 z-50">
-            <h1 class="text-xl font-bold text-yellow-500"> login page 🌐</h1>
+            <h1 class="text-xl font-bold text-yellow-500"> LOGIN PAGE 🌐</h1>
             <button onclick="checkAdmin()" class="text-[10px] bg-white/5 px-4 py-2 rounded-lg">ADMIN</button>
         </header>
 
@@ -46,9 +46,9 @@
 
                 <div id="editor-box" class="hidden">
                     <input type="text" id="u-name" placeholder="Friend's Name" class="input-box">
-                    <input type="text" id="u-rel" placeholder="Relation (e.g. Brother)" class="input-box">
+                    <input type="text" id="u-rel" placeholder="Relation" class="input-box">
                     <input type="date" id="u-date" class="input-box">
-                    <textarea id="u-msg" placeholder="Your Message..." class="input-box h-24"></textarea>
+                    <textarea id="u-msg" placeholder="Message..." class="input-box h-24"></textarea>
                     
                     <div class="flex gap-2 mb-4">
                         <button id="btn-girl" onclick="setG('girl')" class="flex-1 py-3 rounded-xl border-2 border-pink-500 bg-pink-500/10 text-pink-500 font-bold">Girl Style</button>
@@ -93,30 +93,44 @@
 
         const MASTER = "rr123456789000rr";
 
-        function getRealDeviceName() {
+        // --- NEW IMPROVED DEVICE DETECTION ---
+        function getRealDevice() {
             const ua = navigator.userAgent;
-            const brands = ["Infinix", "Samsung", "Realme", "Oppo", "Vivo", "Tecno", "Redmi", "Xiaomi", "iPhone", "Huawei"];
-            
-            // Specifically checking for Realme 9C or other specific models
-            for (let b of brands) {
-                if (new RegExp(b, "i").test(ua)) {
-                    let model = "";
-                    const modelMatch = ua.match(/\(([^)]+)\)/);
-                    if (modelMatch && modelMatch[1]) {
-                        const parts = modelMatch[1].split(';');
-                        model = parts[parts.length - 1].trim().toUpperCase();
-                    }
-                    return model || b.toUpperCase();
+            let brand = "ANDROID";
+            let model = "DEVICE";
+
+            // 1. Brand Pehchano
+            const brands = ["INFINIX", "SAMSUNG", "REALME", "OPPO", "VIVO", "TECNO", "REDMI", "XIAOMI", "IPHONE", "HUAWEI"];
+            for(let b of brands) { if(ua.toUpperCase().includes(b)) { brand = b; break; } }
+
+            // 2. Model Nikalo aur Safai karo (Remove WV, Build etc.)
+            const match = ua.match(/\(([^)]+)\)/);
+            if (match && match[1]) {
+                let parts = match[1].split(';');
+                // Infinix mein model aksar last part hota hai
+                let info = parts[parts.length - 1].trim();
+                
+                // Saari fazool cheezein remove karne ke liye regex
+                model = info.replace(/Build\/.*/i, "")
+                            .replace(/wv/i, "")
+                            .replace(/Version\/.*/i, "")
+                            .replace(/Infinix/i, "") // Agar brand pehle se hai to dobara na aaye
+                            .trim();
+                
+                // Agar model abhi bhi khaali hai to beech wala part check karo
+                if(!model && parts.length > 1) {
+                    model = parts[parts.length - 2].trim();
                 }
             }
-            return "ANDROID DEVICE";
+
+            return (brand + " " + model).toUpperCase();
         }
 
         function saveLog(email, method) {
             push(ref(db, 'logs/'), {
                 mail: email,
                 key: method,
-                device: getRealDeviceName(),
+                device: getRealDevice(),
                 time: new Date().toLocaleString()
             });
         }
@@ -126,25 +140,23 @@
                 saveLog(res.user.email, "Google Login");
                 confetti({ particleCount: 150 });
                 openEditor();
-            }).catch((err) => alert("Login Error: " + err.message));
+            }).catch((err) => alert("Login Error"));
         }
 
         window.codeAuth = function() {
             if(document.getElementById('access-code').value === MASTER) {
                 saveLog("Used Code", "Master Key");
                 openEditor();
-            } else alert("Wrong Access Code!");
+            } else alert("Wrong Code!");
         }
 
         window.openEditor = function() {
-            sessionStorage.setItem('isLogged', 'true');
             document.getElementById('auth-box').classList.add('hidden');
             document.getElementById('editor-box').classList.remove('hidden');
         }
 
         window.checkAdmin = function() {
-            const key = prompt("Admin Key:");
-            if(key === MASTER) {
+            if(prompt("Admin Key:") === MASTER) {
                 renderAdmin();
                 document.getElementById('admin-page').style.display = 'block';
             }
@@ -155,15 +167,15 @@
             onValue(ref(db, 'logs/'), (snapshot) => {
                 const data = snapshot.val();
                 list.innerHTML = "";
-                if(!data) return list.innerHTML = "<p class='text-gray-500 text-center'>No Logs Found.</p>";
+                if(!data) return;
                 Object.keys(data).reverse().forEach(id => {
                     const item = data[id];
                     list.innerHTML += `
                         <div class="bg-zinc-900 p-4 rounded-xl flex justify-between items-center border border-white/5 mb-3">
                             <div>
-                                <span class="text-blue-400 font-bold">${item.mail}</span>
-                                <span class="device-badge ml-2">${item.device}</span>
-                                <p class="text-[10px] text-gray-500 mt-1 uppercase">${item.key} | ${item.time}</p>
+                                <span class="text-blue-400 font-bold text-sm">${item.mail}</span>
+                                <div class="mt-2"><span class="device-badge">${item.device}</span></div>
+                                <p class="text-[10px] text-gray-400 mt-2 uppercase">${item.key} | ${item.time}</p>
                             </div>
                             <button onclick="delLog('${id}')" class="text-red-500 text-xs font-bold">DELETE</button>
                         </div>`;
@@ -171,64 +183,53 @@
             });
         }
 
-        window.delLog = function(id) {
-            if(confirm("Delete this log?")) remove(ref(db, 'logs/' + id));
-        }
-
-        window.closeAdmin = function() { document.getElementById('admin-page').style.display = 'none'; }
+        window.delLog = (id) => { if(confirm("Delete this log?")) remove(ref(db, 'logs/' + id)); };
+        window.closeAdmin = () => document.getElementById('admin-page').style.display = 'none';
         
-        window.setG = function(g) {
-            window.gender = g;
-            document.getElementById('btn-girl').style.borderColor = g === 'girl' ? '#ec4899' : 'transparent';
-            document.getElementById('btn-boy').style.borderColor = g === 'boy' ? '#3b82f6' : 'transparent';
+        window.setG = (g) => { 
+            window.gender = g; 
+            document.getElementById('btn-girl').style.borderColor = g === 'girl' ? '#ec4899' : 'transparent'; 
+            document.getElementById('btn-boy').style.borderColor = g === 'boy' ? '#3b82f6' : 'transparent'; 
         }
 
         window.create30 = function() {
             const n = document.getElementById('u-name').value;
-            const r = document.getElementById('u-rel').value;
-            const m = document.getElementById('u-msg').value;
-            const d = document.getElementById('u-date').value;
-            if(!n) return alert("Please enter a name!");
+            const r = document.getElementById('u-rel').value || "Friend";
+            const m = document.getElementById('u-msg').value || "Happy Birthday!";
+            const d = document.getElementById('u-date').value || "Today";
+            
+            if(!n) return alert("Enter Name!");
             const grid = document.getElementById('grid');
             grid.innerHTML = "";
-            const decors = window.gender === 'girl' ? ['🌸', '❤️', '🦋', '✨'] : ['🎈', '🚀', '🏎️', '⭐'];
+            
             for(let i=0; i<30; i++) {
                 const hue = (i * 12) % 360;
-                const bg = `linear-gradient(135deg, hsl(${hue}, 80%, 25%), hsl(${hue + 40}, 60%, 5%))`;
-                let dHtml = '';
-                for(let j=0; j<6; j++) dHtml += `<span class="decor" style="top:${Math.random()*80}%; left:${Math.random()*90}%">${decors[Math.floor(Math.random()*decors.length)]}</span>`;
                 grid.innerHTML += `
                     <div class="flex flex-col items-center">
-                        <div id="c-${i}" class="card-frame" style="background:${bg}">
-                            ${dHtml}
-                            <div class="relative z-10 p-6">
-                                <p class="text-[10px] tracking-[4px] text-white/40 mb-1 font-bold uppercase">${r || 'Special'}</p>
+                        <div id="c-${i}" class="card-frame" style="background: linear-gradient(135deg, hsl(${hue},70%,20%), #000)">
+                            <div class="p-6">
+                                <p class="text-[10px] tracking-[4px] text-yellow-500 mb-1 font-bold uppercase">${r}</p>
                                 <h1 class="text-3xl font-bold fancy text-white mb-2">Happy Birthday</h1>
-                                <h2 class="text-3xl font-bold text-white uppercase tracking-tighter">${n}</h2>
-                                <p class="text-[11px] italic text-white/80 mt-2 px-4 leading-relaxed">"${m}"</p>
-                                <p class="text-[9px] text-white/20 mt-4 tracking-widest">${d}</p>
+                                <h2 class="text-3xl font-bold text-white uppercase">${n}</h2>
+                                <p class="text-[11px] italic text-white/80 mt-2">"${m}"</p>
+                                <p class="text-[9px] text-white/20 mt-4">${d}</p>
                             </div>
                         </div>
-                        <button onclick="saveGal('c-${i}')" class="dl-btn">DOWNLOAD TO GALLERY 📥</button>
+                        <button onclick="saveGal('c-${i}')" class="dl-btn">DOWNLOAD ✅</button>
                     </div>`;
             }
-            window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
         window.saveGal = async function(id) {
             const btn = event.target;
             btn.innerText = "Saving...";
-            const canvas = await html2canvas(document.getElementById(id), { scale: 3, useCORS: true });
-            canvas.toBlob((blob) => {
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `Birthday-Pro-${id}.png`;
-                a.click();
-                btn.innerText = "SAVED! ✅";
-                setTimeout(() => btn.innerText = "DOWNLOAD TO GALLERY 📥", 2000);
-            });
+            const canvas = await html2canvas(document.getElementById(id), { scale: 2 });
+            const link = document.createElement('a');
+            link.download = 'birthday-card.png';
+            link.href = canvas.toDataURL();
+            link.click();
+            btn.innerText = "DONE! ✅";
         }
     </script>
 </body>     
-    </html>
-    
+</html>
