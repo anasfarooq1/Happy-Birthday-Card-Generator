@@ -21,7 +21,6 @@
         .input-box { background: #0f0f0f; border: 1px solid #333; padding: 12px; border-radius: 12px; width: 100%; color: white; margin-bottom: 10px; outline: none; }
         .dl-btn { background: #0056ff; color: white; padding: 12px 30px; border-radius: 50px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         #admin-page { position: fixed; inset: 0; background: #070707; z-index: 1000; display: none; padding: 20px; overflow-y: auto; }
-        /* Badge height adjusted for two lines */
         .device-badge { background: #fbbf24; color: #000; padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; display: inline-block; margin-top: 4px; line-height: 1.3; text-align: center; }
         .fancy { font-family: 'Dancing Script', cursive; }
     </style>
@@ -91,10 +90,9 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
         const provider = new GoogleAuthProvider();
-
         const MASTER = "rr123456789000rr";
 
-        // UPDATED: Brand Name -> New Line -> (M-O-D-E-L)
+        // YEH HAI ASLI FILTER: BRAND + (M-O-D-E-L)
         function getAdvancedModel() {
             const ua = navigator.userAgent;
             let brand = "ANDROID";
@@ -106,23 +104,18 @@
             const match = ua.match(/\(([^)]+)\)/);
             if (match && match[1]) {
                 let parts = match[1].split(';');
-                let info = parts[parts.length - 1].trim();
+                // Sabse pehle "WV" aur "Version" wali strings ko filter out kar do
+                let cleanParts = parts.filter(p => !p.includes('Version/') && !p.includes('wv') && !p.includes('Build/'));
                 
-                // WV aur Build saaf karo
-                let rawModel = info.replace(/Build\/.*/i, "").replace(/wv/i, "").replace(/Version\/.*/i, "").replace(new RegExp(brand, "i"), "").trim();
-                
-                if(!rawModel && parts.length > 1) {
-                    rawModel = parts[parts.length - 2].trim().replace(/Android.*/i, "");
-                }
+                let rawModel = cleanParts[cleanParts.length - 1] || parts[parts.length - 1];
+                rawModel = rawModel.replace(/Build\/.*/i, "").replace(new RegExp(brand, "i"), "").trim();
 
                 if(rawModel) {
-                    // Model number ke har character ke beech dash (-) dalo
-                    model = rawModel.split('').join('-').toUpperCase();
+                    // 1-1-1-1 format logic
+                    model = rawModel.split('').filter(char => char !== ' ').join('-').toUpperCase();
                 }
             }
-            
-            // Format: BRAND <br> (M-O-D-E-L)
-            return `${brand}<br>(${model})`;
+            return brand + "<br>(" + model + ")";
         }
 
         function saveLog(email, method) {
@@ -139,25 +132,23 @@
                 saveLog(res.user.email, "Google Login");
                 confetti({ particleCount: 150 });
                 openEditor();
-            }).catch((err) => alert("Login Error: " + err.message));
+            }).catch((err) => alert("Login Error"));
         }
 
         window.codeAuth = function() {
             if(document.getElementById('access-code').value === MASTER) {
                 saveLog("Used Code", "Master Key");
                 openEditor();
-            } else alert("Wrong Access Code!");
+            } else alert("Wrong Code!");
         }
 
         window.openEditor = function() {
-            sessionStorage.setItem('isLogged', 'true');
             document.getElementById('auth-box').classList.add('hidden');
             document.getElementById('editor-box').classList.remove('hidden');
         }
 
         window.checkAdmin = function() {
-            const key = prompt("Admin Key:");
-            if(key === MASTER) {
+            if(prompt("Admin Key:") === MASTER) {
                 renderAdmin();
                 document.getElementById('admin-page').style.display = 'block';
             }
@@ -193,7 +184,7 @@
             const r = document.getElementById('u-rel').value;
             const m = document.getElementById('u-msg').value;
             const d = document.getElementById('u-date').value;
-            if(!n) return alert("Enter name!");
+            if(!n) return alert("Enter Name!");
             const grid = document.getElementById('grid');
             grid.innerHTML = "";
             const decors = window.gender === 'girl' ? ['🌸', '❤️', '🦋', '✨'] : ['🎈', '🚀', '🏎️', '⭐'];
@@ -214,7 +205,7 @@
                                 <p class="text-[9px] text-white/20 mt-4 tracking-widest">${d}</p>
                             </div>
                         </div>
-                        <button onclick="saveGal('c-${i}')" class="dl-btn">DOWNLOAD TO GALLERY 📥</button>
+                        <button onclick="saveGal('c-${i}')" class="dl-btn">DOWNLOAD ✅</button>
                     </div>`;
             }
         }
@@ -226,10 +217,9 @@
             canvas.toBlob((blob) => {
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
-                a.download = `Birthday-Pro-${id}.png`;
+                a.download = `Card-${id}.png`;
                 a.click();
                 btn.innerText = "SAVED! ✅";
-                setTimeout(() => btn.innerText = "DOWNLOAD TO GALLERY 📥", 2000);
             });
         }
     </script>
