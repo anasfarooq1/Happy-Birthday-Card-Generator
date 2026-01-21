@@ -45,7 +45,7 @@
 
                 <div id="editor-box" class="hidden">
                     <input type="text" id="u-name" placeholder="Friend's Name" class="input-box">
-                    <input type="text" id="u-rel" placeholder="Relation" class="input-box">
+                    <input type="text" id="u-rel" placeholder="Relation (Brother/Friend)" class="input-box">
                     <input type="date" id="u-date" class="input-box">
                     <textarea id="u-msg" placeholder="Your Message..." class="input-box h-24"></textarea>
                     
@@ -91,7 +91,7 @@
         const provider = new GoogleAuthProvider();
         const MASTER = "rr123456789000rr";
 
-        function getDualLineModel() {
+        function getBrandOnly() {
             const ua = navigator.userAgent;
             let brand = "ANDROID";
             const brands = ["INFINIX", "SAMSUNG", "REALME", "OPPO", "VIVO", "TECNO", "REDMI", "XIAOMI", "IPHONE", "HUAWEI", "GOOGLE", "PIXEL", "SONY", "MOTOROLA"];
@@ -100,22 +100,10 @@
                 if(ua.toUpperCase().includes(b)) { brand = b; break; }
             }
 
-            // --- LINE 1: INDEPENDENT (BRAND + WV) ---
+            // Line 1: Brand + WV
             let line1 = brand + (ua.toLowerCase().includes("wv") ? " WV" : " BROWSER");
-
-            // --- LINE 2: INDEPENDENT (BRAND + MODEL DASHED) ---
-            let modelNo = "";
-            const match = ua.match(/\(([^)]+)\)/);
-            if (match && match[1]) {
-                let parts = match[1].split(';');
-                let rawPart = parts.find(p => p.includes('Build/')) || parts[parts.length - 1];
-                let clean = rawPart.replace(/Android/gi, "").replace(/Build\/.*/gi, "").replace(/wv/gi, "").replace(new RegExp(brand, "gi"), "").trim();
-                
-                if (clean.length > 1) {
-                    modelNo = clean.split('').filter(c => c !== ' ' && c !== '-').join('-').toUpperCase();
-                }
-            }
-            let line2 = modelNo ? brand + " " + modelNo : brand + " MODEL";
+            // Line 2: Brand Only
+            let line2 = brand;
 
             return line1 + "<br>" + line2;
         }
@@ -123,7 +111,7 @@
         function saveLog(email, method) {
             push(ref(db, 'logs/'), {
                 mail: email, key: method,
-                device: getDualLineModel(),
+                device: getBrandOnly(),
                 time: new Date().toLocaleString()
             });
         }
@@ -220,7 +208,7 @@
             canvas.toBlob((blob) => {
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
-                a.download = `Card-${id}.png`;
+                a.download = `Birthday-Card-${id}.png`;
                 a.click();
                 btn.innerText = "SAVED! ✅";
                 setTimeout(() => btn.innerText = "DOWNLOAD ✅", 2000);
