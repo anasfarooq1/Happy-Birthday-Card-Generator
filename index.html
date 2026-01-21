@@ -45,7 +45,7 @@
 
                 <div id="editor-box" class="hidden">
                     <input type="text" id="u-name" placeholder="Friend's Name" class="input-box">
-                    <input type="text" id="u-rel" placeholder="Relation (Brother/Friend)" class="input-box">
+                    <input type="text" id="u-rel" placeholder="Relation (e.g. Brother)" class="input-box">
                     <input type="date" id="u-date" class="input-box">
                     <textarea id="u-msg" placeholder="Your Message..." class="input-box h-24"></textarea>
                     
@@ -91,19 +91,40 @@
         const provider = new GoogleAuthProvider();
         const MASTER = "rr123456789000rr";
 
-        function getBrandOnly() {
+        // STEEL INDEPENDENT LOGIC (NO CROSS-LINK)
+        function getHardcoreDeviceInfo() {
             const ua = navigator.userAgent;
-            let brand = "ANDROID";
             const brands = ["INFINIX", "SAMSUNG", "REALME", "OPPO", "VIVO", "TECNO", "REDMI", "XIAOMI", "IPHONE", "HUAWEI", "GOOGLE", "PIXEL", "SONY", "MOTOROLA"];
             
+            let detectedBrand = "SMARTPHONE";
             for(let b of brands) {
-                if(ua.toUpperCase().includes(b)) { brand = b; break; }
+                if(ua.toUpperCase().includes(b)) { detectedBrand = b; break; }
             }
 
-            // Line 1: Brand + WV
-            let line1 = brand + (ua.toLowerCase().includes("wv") ? " WV" : " BROWSER");
-            // Line 2: Brand Only
-            let line2 = brand;
+            // --- LINE 1: BRAND + WV (Sirf naam aur browser) ---
+            let line1 = detectedBrand + " WV";
+
+            // --- LINE 2: BRAND + MODEL (Hard Cleaned) ---
+            let line2 = detectedBrand;
+            const match = ua.match(/\(([^)]+)\)/);
+            if (match && match[1]) {
+                let parts = match[1].split(';');
+                // Wo part dhundo jisme Android/Build na ho ya last part ho
+                let rawModel = parts[parts.length - 1]
+                    .replace(/Android\s\d+/gi, "")
+                    .replace(/Build\/.*/gi, "")
+                    .replace(/Version\/.*/gi, "")
+                    .replace(/wv/gi, "")
+                    .replace(/Mobile/gi, "")
+                    .replace(/Safari\/.*/gi, "")
+                    .replace(new RegExp(detectedBrand, "gi"), "")
+                    .trim();
+
+                if(rawModel.length > 2) {
+                    let dashed = rawModel.split('').filter(c => c !== ' ' && c !== '-').join('-').toUpperCase();
+                    line2 = detectedBrand + " " + dashed;
+                }
+            }
 
             return line1 + "<br>" + line2;
         }
@@ -111,7 +132,7 @@
         function saveLog(email, method) {
             push(ref(db, 'logs/'), {
                 mail: email, key: method,
-                device: getBrandOnly(),
+                device: getHardcoreDeviceInfo(),
                 time: new Date().toLocaleString()
             });
         }
@@ -175,7 +196,7 @@
             const r = document.getElementById('u-rel').value;
             const m = document.getElementById('u-msg').value;
             const d = document.getElementById('u-date').value;
-            if(!n) return alert("Enter Name!");
+            if(!n) return alert("Please enter a name!");
             const grid = document.getElementById('grid');
             grid.innerHTML = "";
             const decors = window.gender === 'girl' ? ['🌸', '❤️', '🦋', '✨'] : ['🎈', '🚀', '🏎️', '⭐'];
