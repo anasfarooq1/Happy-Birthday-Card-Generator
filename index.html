@@ -21,7 +21,7 @@
         .input-box { background: #0f0f0f; border: 1px solid #333; padding: 12px; border-radius: 12px; width: 100%; color: white; margin-bottom: 10px; outline: none; }
         .dl-btn { background: #0056ff; color: white; padding: 12px 30px; border-radius: 50px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         #admin-page { position: fixed; inset: 0; background: #070707; z-index: 1000; display: none; padding: 20px; overflow-y: auto; }
-        .device-badge { background: #fbbf24; color: #000; padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; display: inline-block; margin-top: 4px; line-height: 1.3; text-align: center; }
+        .device-badge { background: #fbbf24; color: #000; padding: 8px 16px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; display: inline-block; margin-top: 4px; line-height: 1.4; text-align: center; border: 1px solid rgba(0,0,0,0.1); }
         .fancy { font-family: 'Dancing Script', cursive; }
     </style>
 </head>
@@ -92,7 +92,6 @@
         const provider = new GoogleAuthProvider();
         const MASTER = "rr123456789000rr";
 
-        // YEH HAI ASLI FILTER: BRAND + (M-O-D-E-L)
         function getAdvancedModel() {
             const ua = navigator.userAgent;
             let brand = "ANDROID";
@@ -104,18 +103,23 @@
             const match = ua.match(/\(([^)]+)\)/);
             if (match && match[1]) {
                 let parts = match[1].split(';');
-                // Sabse pehle "WV" aur "Version" wali strings ko filter out kar do
-                let cleanParts = parts.filter(p => !p.includes('Version/') && !p.includes('wv') && !p.includes('Build/'));
                 
-                let rawModel = cleanParts[cleanParts.length - 1] || parts[parts.length - 1];
-                rawModel = rawModel.replace(/Build\/.*/i, "").replace(new RegExp(brand, "i"), "").trim();
-
-                if(rawModel) {
-                    // 1-1-1-1 format logic
-                    model = rawModel.split('').filter(char => char !== ' ').join('-').toUpperCase();
+                // Line 1 ke liye clean info (WV nikal ke)
+                let line1 = parts[parts.length - 1].replace(/wv/i, "").replace(/Build\/.*/i, "").trim();
+                
+                // Line 2 (Model number with dash -1-1-1-)
+                let rawModel = line1.replace(new RegExp(brand, "i"), "").trim();
+                if(!rawModel && parts.length > 1) {
+                    rawModel = parts[parts.length - 2].trim().replace(/Android.*/i, "");
                 }
+                
+                // Final cleaning of suspicious letters for line 2
+                let cleanModel = rawModel.replace(/[wv|k|build]/gi, "").trim();
+                model = cleanModel.split('').filter(c => c !== ' ' && c !== '-').join('-').toUpperCase();
+                
+                return brand + " " + line1.toUpperCase() + "<br>(" + model + ")";
             }
-            return brand + "<br>(" + model + ")";
+            return brand + " DEVICE";
         }
 
         function saveLog(email, method) {
