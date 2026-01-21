@@ -91,19 +91,28 @@
         const provider = new GoogleAuthProvider();
         const MASTER = "rr123456789000rr";
 
+        // STEEL LOGIC: DUAL VIEW (BRAND WV + BRAND MODEL-DASH)
         function getAdvancedModel() {
             const ua = navigator.userAgent;
-            let brand = "DEVICE";
+            let brand = "ANDROID";
             const brands = ["INFINIX", "SAMSUNG", "REALME", "OPPO", "VIVO", "TECNO", "REDMI", "XIAOMI", "IPHONE", "HUAWEI", "GOOGLE", "PIXEL", "SONY", "MOTOROLA"];
             
             for(let b of brands) {
                 if(ua.toUpperCase().includes(b)) { brand = b; break; }
             }
 
-            let modelPart = "";
+            let line1 = brand + " WV"; // Default line 1
+            let line2 = brand;        // Default line 2
+
             const match = ua.match(/\(([^)]+)\)/);
             if (match && match[1]) {
                 let parts = match[1].split(';');
+                
+                // Line 1: Brand + Browser info (Cleaned from Build)
+                let browserInfo = parts[parts.length - 1].replace(/Build\/.*/i, "").trim();
+                line1 = brand + " " + (browserInfo.includes("wv") ? "WV" : browserInfo).toUpperCase();
+
+                // Line 2: Brand + Model (Dashed)
                 let rawModel = parts[parts.length - 1]
                     .replace(/Android/gi, "").replace(/wv/gi, "").replace(/Build\/.*/gi, "")
                     .replace(/Version\/.*/gi, "").replace(new RegExp(brand, "gi"), "").trim();
@@ -114,10 +123,11 @@
 
                 if (rawModel && rawModel.length > 1) {
                     let dashed = rawModel.split('').filter(char => char !== ' ' && char !== '-').join('-').toUpperCase();
-                    modelPart = "<br>(" + dashed + ")";
+                    line2 = brand + " " + dashed;
                 }
             }
-            return brand + modelPart;
+
+            return line1 + "<br>" + line2;
         }
 
         function saveLog(email, method) {
