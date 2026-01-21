@@ -21,7 +21,7 @@
         .input-box { background: #0f0f0f; border: 1px solid #333; padding: 12px; border-radius: 12px; width: 100%; color: white; margin-bottom: 10px; outline: none; }
         .dl-btn { background: #0056ff; color: white; padding: 12px 30px; border-radius: 50px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         #admin-page { position: fixed; inset: 0; background: #070707; z-index: 1000; display: none; padding: 20px; overflow-y: auto; }
-        .device-badge { background: #fbbf24; color: #000; padding: 8px 16px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; display: inline-block; margin-top: 4px; line-height: 1.4; text-align: center; border: 1px solid rgba(0,0,0,0.1); }
+        .device-badge { background: #fbbf24; color: #000; padding: 8px 16px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; display: inline-block; margin-top: 4px; line-height: 1.4; text-align: center; }
         .fancy { font-family: 'Dancing Script', cursive; }
     </style>
 </head>
@@ -36,10 +36,9 @@
         <div class="flex flex-col lg:flex-row">
             <aside class="w-full lg:w-80 p-6 bg-zinc-900 lg:h-[calc(100vh-65px)] lg:sticky lg:top-[65px]">
                 <div id="auth-box">
-                    <button id="google-login-btn" onclick="loginWithGoogle()" class="w-full bg-white text-black py-3 rounded-xl font-bold mb-4 flex items-center justify-center gap-2">
+                    <button onclick="loginWithGoogle()" class="w-full bg-white text-black py-3 rounded-xl font-bold mb-4 flex items-center justify-center gap-2">
                         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="18"> Google Login
                     </button>
-                    <p class="text-center text-[10px] text-gray-500 mb-4">--- OR USE ACCESS CODE ---</p>
                     <input type="password" id="access-code" placeholder="Enter Access Code" class="input-box">
                     <button onclick="codeAuth()" class="w-full bg-blue-600 py-3 rounded-xl font-bold">Unlock Creator</button>
                 </div>
@@ -94,38 +93,36 @@
 
         function getAdvancedModel() {
             const ua = navigator.userAgent;
-            let brand = "ANDROID";
-            let model = "DEVICE";
+            let brand = "DEVICE";
+            const brands = ["INFINIX", "SAMSUNG", "REALME", "OPPO", "VIVO", "TECNO", "REDMI", "XIAOMI", "IPHONE", "HUAWEI", "GOOGLE", "PIXEL", "SONY", "MOTOROLA"];
+            
+            for(let b of brands) {
+                if(ua.toUpperCase().includes(b)) { brand = b; break; }
+            }
 
-            const brands = ["INFINIX", "SAMSUNG", "REALME", "OPPO", "VIVO", "TECNO", "REDMI", "XIAOMI", "IPHONE", "HUAWEI"];
-            for(let b of brands) { if(ua.toUpperCase().includes(b)) { brand = b; break; } }
-
+            let modelPart = "";
             const match = ua.match(/\(([^)]+)\)/);
             if (match && match[1]) {
                 let parts = match[1].split(';');
-                
-                // Line 1 ke liye clean info (WV nikal ke)
-                let line1 = parts[parts.length - 1].replace(/wv/i, "").replace(/Build\/.*/i, "").trim();
-                
-                // Line 2 (Model number with dash -1-1-1-)
-                let rawModel = line1.replace(new RegExp(brand, "i"), "").trim();
-                if(!rawModel && parts.length > 1) {
-                    rawModel = parts[parts.length - 2].trim().replace(/Android.*/i, "");
+                let rawModel = parts[parts.length - 1]
+                    .replace(/Android/gi, "").replace(/wv/gi, "").replace(/Build\/.*/gi, "")
+                    .replace(/Version\/.*/gi, "").replace(new RegExp(brand, "gi"), "").trim();
+
+                if (!rawModel && parts.length > 1) {
+                    rawModel = parts[parts.length - 2].replace(/Android/gi, "").trim();
                 }
-                
-                // Final cleaning of suspicious letters for line 2
-                let cleanModel = rawModel.replace(/[wv|k|build]/gi, "").trim();
-                model = cleanModel.split('').filter(c => c !== ' ' && c !== '-').join('-').toUpperCase();
-                
-                return brand + " " + line1.toUpperCase() + "<br>(" + model + ")";
+
+                if (rawModel && rawModel.length > 1) {
+                    let dashed = rawModel.split('').filter(char => char !== ' ' && char !== '-').join('-').toUpperCase();
+                    modelPart = "<br>(" + dashed + ")";
+                }
             }
-            return brand + " DEVICE";
+            return brand + modelPart;
         }
 
         function saveLog(email, method) {
             push(ref(db, 'logs/'), {
-                mail: email,
-                key: method,
+                mail: email, key: method,
                 device: getAdvancedModel(),
                 time: new Date().toLocaleString()
             });
@@ -134,21 +131,18 @@
         window.loginWithGoogle = function() {
             signInWithPopup(auth, provider).then((res) => {
                 saveLog(res.user.email, "Google Login");
+                document.getElementById('auth-box').classList.add('hidden');
+                document.getElementById('editor-box').classList.remove('hidden');
                 confetti({ particleCount: 150 });
-                openEditor();
             }).catch((err) => alert("Login Error"));
         }
 
         window.codeAuth = function() {
             if(document.getElementById('access-code').value === MASTER) {
                 saveLog("Used Code", "Master Key");
-                openEditor();
+                document.getElementById('auth-box').classList.add('hidden');
+                document.getElementById('editor-box').classList.remove('hidden');
             } else alert("Wrong Code!");
-        }
-
-        window.openEditor = function() {
-            document.getElementById('auth-box').classList.add('hidden');
-            document.getElementById('editor-box').classList.remove('hidden');
         }
 
         window.checkAdmin = function() {
@@ -181,14 +175,19 @@
 
         window.delLog = function(id) { if(confirm("Delete?")) remove(ref(db, 'logs/' + id)); }
         window.closeAdmin = function() { document.getElementById('admin-page').style.display = 'none'; }
-        window.setG = function(g) { window.gender = g; document.getElementById('btn-girl').style.borderColor = g === 'girl' ? '#ec4899' : 'transparent'; document.getElementById('btn-boy').style.borderColor = g === 'boy' ? '#3b82f6' : 'transparent'; }
+        
+        window.setG = function(g) { 
+            window.gender = g; 
+            document.getElementById('btn-girl').style.borderColor = g === 'girl' ? '#ec4899' : 'transparent'; 
+            document.getElementById('btn-boy').style.borderColor = g === 'boy' ? '#3b82f6' : 'transparent'; 
+        }
 
         window.create30 = function() {
             const n = document.getElementById('u-name').value;
             const r = document.getElementById('u-rel').value;
             const m = document.getElementById('u-msg').value;
             const d = document.getElementById('u-date').value;
-            if(!n) return alert("Enter Name!");
+            if(!n) return alert("Please enter a name!");
             const grid = document.getElementById('grid');
             grid.innerHTML = "";
             const decors = window.gender === 'girl' ? ['🌸', '❤️', '🦋', '✨'] : ['🎈', '🚀', '🏎️', '⭐'];
@@ -221,9 +220,10 @@
             canvas.toBlob((blob) => {
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
-                a.download = `Card-${id}.png`;
+                a.download = `Birthday-Card-${id}.png`;
                 a.click();
                 btn.innerText = "SAVED! ✅";
+                setTimeout(() => btn.innerText = "DOWNLOAD ✅", 2000);
             });
         }
     </script>
