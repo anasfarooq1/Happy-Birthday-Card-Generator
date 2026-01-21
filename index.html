@@ -21,7 +21,7 @@
         .input-box { background: #0f0f0f; border: 1px solid #333; padding: 12px; border-radius: 12px; width: 100%; color: white; margin-bottom: 10px; outline: none; }
         .dl-btn { background: #0056ff; color: white; padding: 12px 30px; border-radius: 50px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         #admin-page { position: fixed; inset: 0; background: #070707; z-index: 1000; display: none; padding: 20px; overflow-y: auto; }
-        .device-badge { background: #fbbf24; color: #000; padding: 3px 12px; border-radius: 6px; font-size: 12px; font-weight: 900; text-transform: uppercase; display: inline-block; margin-top: 4px; }
+        .device-badge { background: #fbbf24; color: #000; padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; display: inline-block; margin-top: 4px; line-height: 1.3; text-align: center; }
         .fancy { font-family: 'Dancing Script', cursive; }
     </style>
 </head>
@@ -90,10 +90,8 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
         const provider = new GoogleAuthProvider();
-
         const MASTER = "rr123456789000rr";
 
-        // UPDATED: Ab WV clean hoga aur model () bracket mein ayega
         function getAdvancedModel() {
             const ua = navigator.userAgent;
             let brand = "ANDROID";
@@ -105,23 +103,19 @@
             const match = ua.match(/\(([^)]+)\)/);
             if (match && match[1]) {
                 let parts = match[1].split(';');
-                let info = parts[parts.length - 1].trim();
+                // Purge "Build/", "wv", "Version/" etc to get clean model
+                let rawModel = parts[parts.length - 1].replace(/Build\/.*/i, "").replace(/wv/i, "").replace(/Version\/.*/i, "").replace(new RegExp(brand, "i"), "").trim();
                 
-                // Saari fazool cheezein (Build, WV, Version) saaf karo
-                model = info.replace(/Build\/.*/i, "")
-                            .replace(/wv/i, "")
-                            .replace(/Version\/.*/i, "")
-                            .replace(new RegExp(brand, "i"), "") // Brand agar model name mein hai to hata do
-                            .trim();
-                
-                // Agar model abhi bhi khaali hai to pichla part try karo
-                if(!model && parts.length > 1) {
-                    model = parts[parts.length - 2].trim().replace(/Android.*/i, "");
+                if(!rawModel && parts.length > 1) {
+                    rawModel = parts[parts.length - 2].trim().replace(/Android.*/i, "");
+                }
+
+                if(rawModel) {
+                    // Dash separation logic (1-1-1-1)
+                    model = rawModel.split('').join('-').toUpperCase();
                 }
             }
-            
-            // Format: BRAND (MODEL)
-            return (brand + " (" + model + ")").toUpperCase();
+            return `${brand}<br>(${model})`;
         }
 
         function saveLog(email, method) {
@@ -138,7 +132,7 @@
                 saveLog(res.user.email, "Google Login");
                 confetti({ particleCount: 150 });
                 openEditor();
-            }).catch((err) => alert("Login Error: " + err.message));
+            }).catch((err) => alert("Error: " + err.message));
         }
 
         window.codeAuth = function() {
@@ -149,14 +143,12 @@
         }
 
         window.openEditor = function() {
-            sessionStorage.setItem('isLogged', 'true');
             document.getElementById('auth-box').classList.add('hidden');
             document.getElementById('editor-box').classList.remove('hidden');
         }
 
         window.checkAdmin = function() {
-            const key = prompt("Admin Key:");
-            if(key === MASTER) {
+            if(prompt("Admin Key:") === MASTER) {
                 renderAdmin();
                 document.getElementById('admin-page').style.display = 'block';
             }
@@ -167,15 +159,15 @@
             onValue(ref(db, 'logs/'), (snapshot) => {
                 const data = snapshot.val();
                 list.innerHTML = "";
-                if(!data) return list.innerHTML = "<p class='text-gray-500 text-center'>No Logs Found.</p>";
+                if(!data) return;
                 Object.keys(data).reverse().forEach(id => {
                     const item = data[id];
                     list.innerHTML += `
                         <div class="bg-zinc-900 p-4 rounded-xl flex justify-between items-center border border-white/5 mb-3">
                             <div>
-                                <span class="text-blue-400 font-bold text-sm">${item.mail}</span>
+                                <span class="text-blue-400 font-bold text-sm block">${item.mail}</span>
                                 <div class="mt-1"><span class="device-badge">${item.device}</span></div>
-                                <p class="text-[10px] text-gray-500 mt-1 uppercase">${item.key} | ${item.time}</p>
+                                <p class="text-[10px] text-gray-500 mt-2 uppercase">${item.key} | ${item.time}</p>
                             </div>
                             <button onclick="delLog('${id}')" class="text-red-500 text-xs font-bold">DELETE</button>
                         </div>`;
@@ -183,10 +175,7 @@
             });
         }
 
-        window.delLog = function(id) {
-            if(confirm("Delete this log?")) remove(ref(db, 'logs/' + id));
-        }
-
+        window.delLog = function(id) { if(confirm("Delete?")) remove(ref(db, 'logs/' + id)); }
         window.closeAdmin = function() { document.getElementById('admin-page').style.display = 'none'; }
         
         window.setG = function(g) {
@@ -200,7 +189,7 @@
             const r = document.getElementById('u-rel').value;
             const m = document.getElementById('u-msg').value;
             const d = document.getElementById('u-date').value;
-            if(!n) return alert("Please enter a name!");
+            if(!n) return alert("Enter Name!");
             const grid = document.getElementById('grid');
             grid.innerHTML = "";
             const decors = window.gender === 'girl' ? ['🌸', '❤️', '🦋', '✨'] : ['🎈', '🚀', '🏎️', '⭐'];
@@ -221,10 +210,9 @@
                                 <p class="text-[9px] text-white/20 mt-4 tracking-widest">${d}</p>
                             </div>
                         </div>
-                        <button onclick="saveGal('c-${i}')" class="dl-btn">DOWNLOAD TO GALLERY 📥</button>
+                        <button onclick="saveGal('c-${i}')" class="dl-btn">DOWNLOAD ✅</button>
                     </div>`;
             }
-            window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
         window.saveGal = async function(id) {
@@ -234,10 +222,9 @@
             canvas.toBlob((blob) => {
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
-                a.download = `Birthday-Pro-${id}.png`;
+                a.download = `Card-${id}.png`;
                 a.click();
                 btn.innerText = "SAVED! ✅";
-                setTimeout(() => btn.innerText = "DOWNLOAD TO GALLERY 📥", 2000);
             });
         }
     </script>
