@@ -93,33 +93,35 @@
 
         const MASTER = "rr123456789000rr";
 
-        // AB YEH FUNCTION "WV" KO KHATAM KARKE ASLI MODEL NIKALEGA
+        // UPDATED: Ab WV clean hoga aur model () bracket mein ayega
         function getAdvancedModel() {
             const ua = navigator.userAgent;
-            let finalModel = "ANDROID DEVICE";
+            let brand = "ANDROID";
+            let model = "DEVICE";
 
-            if (ua.match(/\(([^)]+)\)/)) {
-                let section = ua.match(/\(([^)]+)\)/)[1];
-                let parts = section.split(';');
+            const brands = ["INFINIX", "SAMSUNG", "REALME", "OPPO", "VIVO", "TECNO", "REDMI", "XIAOMI", "IPHONE", "HUAWEI"];
+            for(let b of brands) { if(ua.toUpperCase().includes(b)) { brand = b; break; } }
+
+            const match = ua.match(/\(([^)]+)\)/);
+            if (match && match[1]) {
+                let parts = match[1].split(';');
+                let info = parts[parts.length - 1].trim();
                 
-                // Zyadatar Androids mein model last ya second last part hota hai
-                if(parts.length > 2) {
-                    finalModel = parts[parts.length - 1].trim();
-                    // Agar "WV" ya "Build" wagaira ho to usay saaf karo
-                    finalModel = finalModel.split('Build/')[0].split('WV')[0].trim();
-                } else {
-                    finalModel = parts[0];
+                // Saari fazool cheezein (Build, WV, Version) saaf karo
+                model = info.replace(/Build\/.*/i, "")
+                            .replace(/wv/i, "")
+                            .replace(/Version\/.*/i, "")
+                            .replace(new RegExp(brand, "i"), "") // Brand agar model name mein hai to hata do
+                            .trim();
+                
+                // Agar model abhi bhi khaali hai to pichla part try karo
+                if(!model && parts.length > 1) {
+                    model = parts[parts.length - 2].trim().replace(/Android.*/i, "");
                 }
             }
             
-            // Brands check for better display
-            const brands = ["INFINIX", "SAMSUNG", "REALME", "OPPO", "VIVO", "TECNO", "REDMI", "XIAOMI", "IPHONE"];
-            let foundBrand = "";
-            for(let b of brands) {
-                if(ua.toUpperCase().includes(b)) { foundBrand = b + " "; break; }
-            }
-
-            return (foundBrand + finalModel).toUpperCase();
+            // Format: BRAND (MODEL)
+            return (brand + " (" + model + ")").toUpperCase();
         }
 
         function saveLog(email, method) {
