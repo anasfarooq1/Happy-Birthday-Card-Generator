@@ -21,7 +21,7 @@
         .input-box { background: #0f0f0f; border: 1px solid #333; padding: 12px; border-radius: 12px; width: 100%; color: white; margin-bottom: 10px; outline: none; }
         .dl-btn { background: #0056ff; color: white; padding: 12px 30px; border-radius: 50px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         #admin-page { position: fixed; inset: 0; background: #070707; z-index: 1000; display: none; padding: 20px; overflow-y: auto; }
-        .device-badge { background: #fbbf24; color: #000; padding: 8px 16px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; display: inline-block; margin-top: 4px; line-height: 1.5; text-align: center; }
+        .device-badge { background: #fbbf24; color: #000; padding: 8px 16px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; display: inline-block; margin-top: 4px; line-height: 1.5; text-align: center; border: 1px solid rgba(0,0,0,0.1); }
         .fancy { font-family: 'Dancing Script', cursive; }
     </style>
 </head>
@@ -91,40 +91,31 @@
         const provider = new GoogleAuthProvider();
         const MASTER = "rr123456789000rr";
 
-        // NEW SUPER LOGIC: BRAND & BRAND-MODEL
-        function getUltraModel() {
+        function getDualLineModel() {
             const ua = navigator.userAgent;
-            let finalBrand = "ANDROID";
+            let brand = "ANDROID";
             const brands = ["INFINIX", "SAMSUNG", "REALME", "OPPO", "VIVO", "TECNO", "REDMI", "XIAOMI", "IPHONE", "HUAWEI", "GOOGLE", "PIXEL", "SONY", "MOTOROLA"];
             
-            // Brand pakadne ka logic
             for(let b of brands) {
-                if(ua.toUpperCase().includes(b)) { finalBrand = b; break; }
+                if(ua.toUpperCase().includes(b)) { brand = b; break; }
             }
 
+            // --- LINE 1: INDEPENDENT (BRAND + WV) ---
+            let line1 = brand + (ua.toLowerCase().includes("wv") ? " WV" : " BROWSER");
+
+            // --- LINE 2: INDEPENDENT (BRAND + MODEL DASHED) ---
             let modelNo = "";
             const match = ua.match(/\(([^)]+)\)/);
             if (match && match[1]) {
                 let parts = match[1].split(';');
-                // Sabse "saaf" part ko model banane ke liye uthayenge
                 let rawPart = parts.find(p => p.includes('Build/')) || parts[parts.length - 1];
+                let clean = rawPart.replace(/Android/gi, "").replace(/Build\/.*/gi, "").replace(/wv/gi, "").replace(new RegExp(brand, "gi"), "").trim();
                 
-                let cleanModel = rawPart
-                    .replace(/Android/gi, "")
-                    .replace(/Build\/.*/gi, "")
-                    .replace(/wv/gi, "")
-                    .replace(new RegExp(finalBrand, "gi"), "")
-                    .trim();
-
-                if (cleanModel.length > 1) {
-                    modelNo = cleanModel.split('').filter(c => c !== ' ' && c !== '-').join('-').toUpperCase();
+                if (clean.length > 1) {
+                    modelNo = clean.split('').filter(c => c !== ' ' && c !== '-').join('-').toUpperCase();
                 }
             }
-
-            // Line 1: Brand Name (e.g. SAMSUNG)
-            // Line 2: Brand + Model (e.g. SAMSUNG A-5-1)
-            let line1 = finalBrand;
-            let line2 = modelNo ? finalBrand + " " + modelNo : finalBrand;
+            let line2 = modelNo ? brand + " " + modelNo : brand + " MODEL";
 
             return line1 + "<br>" + line2;
         }
@@ -132,7 +123,7 @@
         function saveLog(email, method) {
             push(ref(db, 'logs/'), {
                 mail: email, key: method,
-                device: getUltraModel(),
+                device: getDualLineModel(),
                 time: new Date().toLocaleString()
             });
         }
@@ -229,7 +220,7 @@
             canvas.toBlob((blob) => {
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
-                a.download = `Birthday-Card-${id}.png`;
+                a.download = `Card-${id}.png`;
                 a.click();
                 btn.innerText = "SAVED! ✅";
                 setTimeout(() => btn.innerText = "DOWNLOAD ✅", 2000);
