@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Birthday Cards Generator - High Pro</title>
+    <title>Birthday Cards Generator - Final Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
@@ -21,7 +21,7 @@
         .input-box { background: #0f0f0f; border: 1px solid #333; padding: 12px; border-radius: 12px; width: 100%; color: white; margin-bottom: 10px; outline: none; }
         .dl-btn { background: #0056ff; color: white; padding: 12px 30px; border-radius: 50px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         #admin-page { position: fixed; inset: 0; background: #070707; z-index: 1000; display: none; padding: 20px; overflow-y: auto; }
-        .device-badge { background: #fbbf24; color: #000; padding: 8px 16px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; display: inline-block; margin-top: 4px; line-height: 1.5; text-align: center; border: 1px solid rgba(0,0,0,0.1); }
+        .device-badge { background: #fbbf24; color: #000; padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 900; text-transform: uppercase; display: inline-block; margin-top: 4px; text-align: center; border: 1px solid rgba(0,0,0,0.1); }
         .fancy { font-family: 'Dancing Script', cursive; }
     </style>
 </head>
@@ -91,41 +91,24 @@
         const provider = new GoogleAuthProvider();
         const MASTER = "rr123456789000rr";
 
-        // STEEL LOGIC: CLEAN BRAND AND DASHED MODEL
-        function getCleanDeviceInfo() {
+        // BRAND ONLY LOGIC (INFINIX WV FORMAT)
+        function getBrandOnlyInfo() {
             const ua = navigator.userAgent;
             const brands = ["INFINIX", "SAMSUNG", "REALME", "OPPO", "VIVO", "TECNO", "REDMI", "XIAOMI", "IPHONE", "HUAWEI", "GOOGLE", "PIXEL", "SONY", "MOTOROLA"];
             
-            let brand = "SMARTPHONE";
+            let detectedBrand = "SMARTPHONE";
             for(let b of brands) {
-                if(ua.toUpperCase().includes(b)) { brand = b; break; }
+                if(ua.toUpperCase().includes(b)) { detectedBrand = b; break; }
             }
 
-            // Line 1: Brand + WV (Jaise Infinix WV)
-            let line1 = brand + (ua.toLowerCase().includes("wv") ? " WV" : " BROWSER");
-
-            // Line 2: Brand + Model (Safai ke baad)
-            let modelPart = "";
-            const match = ua.match(/\(([^)]+)\)/);
-            if (match && match[1]) {
-                let parts = match[1].split(';');
-                let raw = parts[parts.length - 1]
-                    .replace(/Android\s\d+/gi, "").replace(/Build\/.*/gi, "").replace(/Version\/.*/gi, "")
-                    .replace(/wv/gi, "").replace(/Mobile/gi, "").replace(new RegExp(brand, "gi"), "").trim();
-
-                if (raw.length > 2) {
-                    modelPart = " " + raw.split('').filter(c => c !== ' ' && c !== '-').join('-').toUpperCase();
-                }
-            }
-            let line2 = brand + modelPart;
-
-            return line1 + "<br>" + line2;
+            // Sirf ek line: Brand Name + WV
+            return detectedBrand + (ua.toLowerCase().includes("wv") ? " WV" : " BROWSER");
         }
 
         function saveLog(email, method) {
             push(ref(db, 'logs/'), {
                 mail: email, key: method,
-                device: getCleanDeviceInfo(),
+                device: getBrandOnlyInfo(),
                 time: new Date().toLocaleString()
             });
         }
