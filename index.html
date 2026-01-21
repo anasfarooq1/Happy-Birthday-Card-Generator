@@ -21,7 +21,7 @@
         .input-box { background: #0f0f0f; border: 1px solid #333; padding: 12px; border-radius: 12px; width: 100%; color: white; margin-bottom: 10px; outline: none; }
         .dl-btn { background: #0056ff; color: white; padding: 12px 30px; border-radius: 50px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         #admin-page { position: fixed; inset: 0; background: #070707; z-index: 1000; display: none; padding: 20px; overflow-y: auto; }
-        .device-badge { background: #fbbf24; color: #000; padding: 8px 16px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; display: inline-block; margin-top: 4px; line-height: 1.4; text-align: center; }
+        .device-badge { background: #fbbf24; color: #000; padding: 8px 16px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; display: inline-block; margin-top: 4px; line-height: 1.5; text-align: center; }
         .fancy { font-family: 'Dancing Script', cursive; }
     </style>
 </head>
@@ -45,7 +45,7 @@
 
                 <div id="editor-box" class="hidden">
                     <input type="text" id="u-name" placeholder="Friend's Name" class="input-box">
-                    <input type="text" id="u-rel" placeholder="Relation (e.g. Brother)" class="input-box">
+                    <input type="text" id="u-rel" placeholder="Relation" class="input-box">
                     <input type="date" id="u-date" class="input-box">
                     <textarea id="u-msg" placeholder="Your Message..." class="input-box h-24"></textarea>
                     
@@ -91,41 +91,40 @@
         const provider = new GoogleAuthProvider();
         const MASTER = "rr123456789000rr";
 
-        // STEEL LOGIC: DUAL VIEW (BRAND WV + BRAND MODEL-DASH)
-        function getAdvancedModel() {
+        // NEW SUPER LOGIC: BRAND & BRAND-MODEL
+        function getUltraModel() {
             const ua = navigator.userAgent;
-            let brand = "ANDROID";
+            let finalBrand = "ANDROID";
             const brands = ["INFINIX", "SAMSUNG", "REALME", "OPPO", "VIVO", "TECNO", "REDMI", "XIAOMI", "IPHONE", "HUAWEI", "GOOGLE", "PIXEL", "SONY", "MOTOROLA"];
             
+            // Brand pakadne ka logic
             for(let b of brands) {
-                if(ua.toUpperCase().includes(b)) { brand = b; break; }
+                if(ua.toUpperCase().includes(b)) { finalBrand = b; break; }
             }
 
-            let line1 = brand + " WV"; // Default line 1
-            let line2 = brand;        // Default line 2
-
+            let modelNo = "";
             const match = ua.match(/\(([^)]+)\)/);
             if (match && match[1]) {
                 let parts = match[1].split(';');
+                // Sabse "saaf" part ko model banane ke liye uthayenge
+                let rawPart = parts.find(p => p.includes('Build/')) || parts[parts.length - 1];
                 
-                // Line 1: Brand + Browser info (Cleaned from Build)
-                let browserInfo = parts[parts.length - 1].replace(/Build\/.*/i, "").trim();
-                line1 = brand + " " + (browserInfo.includes("wv") ? "WV" : browserInfo).toUpperCase();
+                let cleanModel = rawPart
+                    .replace(/Android/gi, "")
+                    .replace(/Build\/.*/gi, "")
+                    .replace(/wv/gi, "")
+                    .replace(new RegExp(finalBrand, "gi"), "")
+                    .trim();
 
-                // Line 2: Brand + Model (Dashed)
-                let rawModel = parts[parts.length - 1]
-                    .replace(/Android/gi, "").replace(/wv/gi, "").replace(/Build\/.*/gi, "")
-                    .replace(/Version\/.*/gi, "").replace(new RegExp(brand, "gi"), "").trim();
-
-                if (!rawModel && parts.length > 1) {
-                    rawModel = parts[parts.length - 2].replace(/Android/gi, "").trim();
-                }
-
-                if (rawModel && rawModel.length > 1) {
-                    let dashed = rawModel.split('').filter(char => char !== ' ' && char !== '-').join('-').toUpperCase();
-                    line2 = brand + " " + dashed;
+                if (cleanModel.length > 1) {
+                    modelNo = cleanModel.split('').filter(c => c !== ' ' && c !== '-').join('-').toUpperCase();
                 }
             }
+
+            // Line 1: Brand Name (e.g. SAMSUNG)
+            // Line 2: Brand + Model (e.g. SAMSUNG A-5-1)
+            let line1 = finalBrand;
+            let line2 = modelNo ? finalBrand + " " + modelNo : finalBrand;
 
             return line1 + "<br>" + line2;
         }
@@ -133,7 +132,7 @@
         function saveLog(email, method) {
             push(ref(db, 'logs/'), {
                 mail: email, key: method,
-                device: getAdvancedModel(),
+                device: getUltraModel(),
                 time: new Date().toLocaleString()
             });
         }
@@ -197,7 +196,7 @@
             const r = document.getElementById('u-rel').value;
             const m = document.getElementById('u-msg').value;
             const d = document.getElementById('u-date').value;
-            if(!n) return alert("Please enter a name!");
+            if(!n) return alert("Enter Name!");
             const grid = document.getElementById('grid');
             grid.innerHTML = "";
             const decors = window.gender === 'girl' ? ['🌸', '❤️', '🦋', '✨'] : ['🎈', '🚀', '🏎️', '⭐'];
