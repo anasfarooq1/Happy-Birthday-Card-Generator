@@ -23,6 +23,9 @@
         #admin-page { position: fixed; inset: 0; background: #070707; z-index: 1000; display: none; padding: 20px; overflow-y: auto; }
         .device-badge { background: #fbbf24; color: #000; padding: 3px 12px; border-radius: 6px; font-size: 12px; font-weight: 900; text-transform: uppercase; display: inline-block; margin-top: 4px; }
         .fancy { font-family: 'Dancing Script', cursive; }
+
+        /* Naya Ad Container Style */
+        #night-orbit-ad { display: none; background: #fff; padding: 10px; border-radius: 15px; margin-bottom: 20px; text-align: center; border: 2px solid #fbbf24; }
     </style>
 </head>
 <body>
@@ -35,6 +38,13 @@
 
         <div class="flex flex-col lg:flex-row">
             <aside class="w-full lg:w-80 p-6 bg-zinc-900 lg:h-[calc(100vh-65px)] lg:sticky lg:top-[65px]">
+                
+                <div id="night-orbit-ad">
+                    <p class="text-black text-[10px] font-bold mb-1">PROMOTED CONTENT</p>
+                    <script async="async" data-cfasync="false" src="https://pl28552020.effectivegatecpm.com/92d86d98b5c17879d780dea98ea26647/invoke.js"></script>
+                    <div id="container-92d86d98b5c17879d780dea98ea26647"></div>
+                </div>
+
                 <div id="auth-box">
                     <button id="google-login-btn" onclick="loginWithGoogle()" class="w-full bg-white text-black py-3 rounded-xl font-bold mb-4 flex items-center justify-center gap-2">
                         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="18"> Google Login
@@ -93,6 +103,11 @@
 
         const MASTER = "rr123456789000rr";
 
+        // Ad trigger karne ka function
+        function triggerAd() {
+            document.getElementById('night-orbit-ad').style.display = 'block';
+        }
+
         // AB YEH FUNCTION "WV" KO KHATAM KARKE ASLI MODEL NIKALEGA
         function getAdvancedModel() {
             const ua = navigator.userAgent;
@@ -102,17 +117,14 @@
                 let section = ua.match(/\(([^)]+)\)/)[1];
                 let parts = section.split(';');
                 
-                // Zyadatar Androids mein model last ya second last part hota hai
                 if(parts.length > 2) {
                     finalModel = parts[parts.length - 1].trim();
-                    // Agar "WV" ya "Build" wagaira ho to usay saaf karo
                     finalModel = finalModel.split('Build/')[0].split('WV')[0].trim();
                 } else {
                     finalModel = parts[0];
                 }
             }
             
-            // Brands check for better display
             const brands = ["INFINIX", "SAMSUNG", "REALME", "OPPO", "VIVO", "TECNO", "REDMI", "XIAOMI", "IPHONE"];
             let foundBrand = "";
             for(let b of brands) {
@@ -132,6 +144,7 @@
         }
 
         window.loginWithGoogle = function() {
+            triggerAd(); // Ad on Login
             signInWithPopup(auth, provider).then((res) => {
                 saveLog(res.user.email, "Google Login");
                 confetti({ particleCount: 150 });
@@ -141,6 +154,7 @@
 
         window.codeAuth = function() {
             if(document.getElementById('access-code').value === MASTER) {
+                triggerAd(); // Ad on Code Auth
                 saveLog("Used Code", "Master Key");
                 openEditor();
             } else alert("Wrong Access Code!");
@@ -199,6 +213,9 @@
             const m = document.getElementById('u-msg').value;
             const d = document.getElementById('u-date').value;
             if(!n) return alert("Please enter a name!");
+            
+            triggerAd(); // Ad on Generate
+            
             const grid = document.getElementById('grid');
             grid.innerHTML = "";
             const decors = window.gender === 'girl' ? ['🌸', '❤️', '🦋', '✨'] : ['🎈', '🚀', '🏎️', '⭐'];
@@ -226,6 +243,7 @@
         }
 
         window.saveGal = async function(id) {
+            triggerAd(); // Ad on Download
             const btn = event.target;
             btn.innerText = "Saving...";
             const canvas = await html2canvas(document.getElementById(id), { scale: 3, useCORS: true });
